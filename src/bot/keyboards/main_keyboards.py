@@ -9,3 +9,9 @@ main_kb = ReplyKeyboardMarkup(
         [KeyboardButton(text='parsing')],
     ]
 )
+parse_inline_kb = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text='PARSE', callback_data='_parse_')],
+        [InlineKeyboardButton(text='CANCEL', callback_data='_cancel_')],
+    ]
+)

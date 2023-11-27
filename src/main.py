@@ -6,7 +6,7 @@ from aiogram.enums.parse_mode import ParseMode
 
 from bot.config import Config
 from bot.handlers.main_handlers import router
-from bot.admin.handlers import router as admin_router
+from bot.admin.handlers.handlers import router as admin_router
 
 
 async def start_bot(bot: Bot) -> None:
