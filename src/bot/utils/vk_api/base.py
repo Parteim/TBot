@@ -82,25 +82,3 @@ class Groups(MethodManager):
         )
 
         return response
-
-
-# async def main():
-#     TOKEN = os.getenv('VK_SERVICES_ACCESS_KEY')
-#     print(TOKEN)
-#
-#     vk_bot = Bot(TOKEN)
-#     wall = Wall(vk_bot)
-#     groups = Groups(vk_bot)
-#
-#     try:
-#         # response = await groups.get_by_id(['land_of_art', 'sushi_rolls_barnaul'])
-#         # print(response)
-#         # print(len(response['response']))
-#         posts = await wall.get_posts('land_of_art', 10)
-#         print(posts)
-#     finally:
-#         await vk_bot.close_session()
-#
-#
-# if __name__ == '__main__':
-#     asyncio.run(main())

@@ -1,6 +1,5 @@
-from ..Base import Bot, Wall
-
 from src.bot.config import Config
+from ..base import Bot, Wall
 
 
 def get_current_size_photo(images: list):
@@ -13,12 +12,11 @@ def get_current_size_photo(images: list):
     return current_img
 
 
-async def get_posts(domain: str, count_of_posts: int):
-    vk_bot = Bot(Config.VK_ACCESS_TOKEN)
+async def get_posts(bot: Bot, domain: str, count_of_posts: int):
+    vk_bot = bot
     try:
         posts = []
         response = await Wall(vk_bot).get_posts(domain, count_of_posts)
-        print(response)
         for post in response:
             post_data = {
                 'text': post['text'],

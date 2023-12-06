@@ -1,12 +1,10 @@
 from typing import List
-import sqlalchemy
 from sqlalchemy import ForeignKey, String, Integer, Boolean, BigInteger
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
+from sqlalchemy.ext.asyncio import AsyncAttrs
 
-from src.bot.config import Config
 
-
-class Base(DeclarativeBase):
+class Base(AsyncAttrs, DeclarativeBase):
     pass
 
 
@@ -14,25 +12,25 @@ class User(Base):
     __tablename__ = 'users'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(Integer(), unique=True)
-    username: Mapped[str] = mapped_column(String(50))
+    telegram_id = mapped_column(BigInteger, unique=True)
+    username: Mapped[str]
 
-    is_admin: Mapped[bool] = mapped_column(Boolean())
+    is_admin: Mapped[bool]
 
     def __repr__(self):
-        return f'User {self.username}, id: {self.user_id}, is admin: {self.is_admin}'
+        return f'User {self.username}, id: {self.telegram_id}, is admin: {self.is_admin}'
 
 
 class VkGroup(Base):
     __tablename__ = 'vk_groups'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    group_id: Mapped[int] = mapped_column(BigInteger(), unique=True)
-    domain: Mapped[str] = mapped_column(String(100), unique=True)
-    group_name: Mapped[str] = mapped_column(String(100))
-    is_closed: Mapped[bool] = mapped_column(Boolean())
+    group_id = mapped_column(BigInteger, unique=True)
+    domain: Mapped[str] = mapped_column(unique=True)
+    group_name: Mapped[str]
+    is_closed: Mapped[bool]
 
-    logo: Mapped[str] = mapped_column(String(255))
+    logo: Mapped[str]
 
     tg_channel: Mapped[List['TgChannel']] = relationship(
         back_populates='vk_group', cascade='all, delete-orphan'
@@ -41,23 +39,22 @@ class VkGroup(Base):
     def __repr__(self):
         return f'Group {self.group_name}, group_id: {self.group_id}'
 
+    def response_message_repr(self):
+        response_message = f'<b>{self.group_name}</b>\n' \
+                           f'id: {self.group_id}\n' \
+                           f'domain: {self.domain}'
+        return self.logo, response_message
+
 
 class TgChannel(Base):
     __tablename__ = 'tg_channel'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    channel_id: Mapped[int] = mapped_column(BigInteger(), unique=True)
-    channel_name: Mapped[str] = mapped_column(String(50))
-
-    logo: Mapped[str] = mapped_column((String(255)))
+    channel_id = mapped_column(BigInteger, unique=True)
+    title: Mapped[str] = mapped_column(String(50))
 
     vk_group_id: Mapped[int] = mapped_column(ForeignKey('vk_groups.id'))
     vk_group: Mapped['VkGroup'] = relationship(back_populates='tg_channel')
 
     def __repr__(self):
         return f'Telegram channel {self.channel_name}, channel_id: {self.channel_id}'
-
-
-engin = sqlalchemy.create_engine(Config.DB_URL, echo=True)
-
-Base.metadata.create_all(engin)

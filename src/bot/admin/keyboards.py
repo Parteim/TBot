@@ -1,73 +1,122 @@
-from aiogram.types import ReplyKeyboardMarkup, \
-    KeyboardButton, \
-    InlineKeyboardMarkup, \
-    InlineKeyboardButton
-from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
+from typing import Any
 
-admin_panel_kb = ReplyKeyboardMarkup(
-    resize_keyboard=True,
-    keyboard=[
-        [KeyboardButton(text='bot config'), KeyboardButton(text='VK')],
-        [KeyboardButton(text='TG')],
-    ]
-)
-
-admin_vk_kb = ReplyKeyboardMarkup(
-    resize_keyboard=True,
-    keyboard=[
-        [KeyboardButton(text='group list'), KeyboardButton(text='add group')],
-        [KeyboardButton(text='selective mode'), KeyboardButton(text='select group')],
-        [KeyboardButton(text='fast parse')],
-        [KeyboardButton(text='back')]
-    ]
-)
-
-admin_cancel_kb = ReplyKeyboardMarkup(
-    resize_keyboard=True,
-    keyboard=[
-        [KeyboardButton(text='CANCEL')]
-    ]
-)
-
-admin_fast_parse_inline_kb = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [InlineKeyboardButton(text='PARSE', callback_data='_parse_')],
-        [InlineKeyboardButton(text='PARSE TO CHANNEL', callback_data='_parse_to_channel_')],
-        [InlineKeyboardButton(text='CANCEL', callback_data='_cancel_')],
-    ]
-)
-
-admin_add_group_inline_kb = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [InlineKeyboardButton(text='ADD', callback_data='_add_group_')],
-        [InlineKeyboardButton(text='CANCEL', callback_data='_cancel_')],
-    ]
-)
-
-selective_mode_instance_group_kb = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [InlineKeyboardButton(text='LINK WITH CHANNEL', callback_data='_link_with_channel_')],
-        [InlineKeyboardButton(text='REMOVE', callback_data='_remove_')],
-    ]
-)
-
-selective_mode_kb = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text='link with channel'), KeyboardButton(text='parse')],
-        [KeyboardButton(text='remove')],
-        [KeyboardButton(text='back')]
-    ]
-)
+from aiogram.types import (ReplyKeyboardMarkup,
+                           KeyboardButton,
+                           InlineKeyboardMarkup,
+                           InlineKeyboardButton)
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
-def sm_get_instance_group_kb(group):
-    builder = InlineKeyboardBuilder()
-    builder.button(text='SELECT', callback_data=f'_select_{group.id}')
-    return builder.as_markup()
+class ReplyKeyboardButton(KeyboardButton):
+    def __init__(self, *, text: str, **__pydantic_kwargs: Any):
+        super().__init__(text=text, **__pydantic_kwargs)
+
+    def __str__(self):
+        return self.text
 
 
-def sm_channel_list_kb(channels):
-    builder = ReplyKeyboardBuilder()
-    for channel in channels:
-        builder.button(text=f'{channel.channel_name} id: {channel.channel_id}')
-    return builder.as_markup(resize_keyboard=True)
+class AdminPanelKeyboard:
+    def __init__(self):
+        self.BOT_CONFIG_BTN = ReplyKeyboardButton(text='Bot config')
+        self.VK_CONSOLE_BTN = ReplyKeyboardButton(text='VK')
+        self.TG_CONSOLE_BTN = ReplyKeyboardButton(text='TG')
+
+    def get_keyboard(self):
+        keyboard = ReplyKeyboardMarkup(
+            resize_keyboard=True,
+            keyboard=[
+                [self.BOT_CONFIG_BTN, self.VK_CONSOLE_BTN],
+                [self.TG_CONSOLE_BTN],
+            ]
+        )
+        return keyboard
+
+
+class AdminVkConsoleKeyboard:
+    def __init__(self):
+        self.GROUP_LIST_BTN = ReplyKeyboardButton(text='group list')
+        self.ADD_GROUP_BTN = ReplyKeyboardButton(text='add group')
+        self.SELECTIVE_MODE_BTN = ReplyKeyboardButton(text='selective mode')
+        self.FAST_PARSE_BTN = ReplyKeyboardButton(text='fast parse')
+        self.BACK_BTN = ReplyKeyboardButton(text='cancel')
+
+    def get_keyboard(self):
+        keyboard = ReplyKeyboardMarkup(
+            resize_keyboard=True,
+            keyboard=[
+                [self.GROUP_LIST_BTN, self.ADD_GROUP_BTN],
+                [self.SELECTIVE_MODE_BTN],
+                [self.FAST_PARSE_BTN],
+                [self.BACK_BTN]
+            ]
+        )
+        return keyboard
+
+
+class AdminParseInlineKeyboard:
+    def __init__(self):
+        self.PARSE_BTN = InlineKeyboardButton(text='PARS', callback_data='_parse_')
+        self.PARS_TO_CHANNEL_BTN = InlineKeyboardButton(text='PARS TO CHANNEL', callback_data='_parse_to_channel_')
+        self.CANCEL_BTN = InlineKeyboardButton(text='CANCEL', callback_data='_cancel_')
+
+    def get_keyboard(self):
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [self.PARSE_BTN],
+                [self.PARS_TO_CHANNEL_BTN],
+                [self.CANCEL_BTN],
+            ])
+        return keyboard
+
+
+class AdminAddGroupInlineKeyBoard:
+    def __init__(self):
+        self.ADD_BTN = InlineKeyboardButton(text='ADD', callback_data='_add_')
+        self.CANCEL_BTN = InlineKeyboardButton(text='CANCEL', callback_data='_cancel_')
+
+    def get_keyboard(self):
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [self.ADD_BTN],
+                [self.CANCEL_BTN],
+            ])
+        return keyboard
+
+
+class SelectiveModeInlineKeyboard:
+    def __init__(self):
+        self.SELECT_BTN = InlineKeyboardButton(text='SELECT', callback_data='_select_')
+        self.CANCEL_BTN = InlineKeyboardButton(text='CANCEL', callback_data='_cancel_')
+
+        self.PARSE_BTN = InlineKeyboardButton(text='PARSE', callback_data='_selective_mode_parse_')
+        self.DELETE_BTN = InlineKeyboardButton(text='DELETE', callback_data='_delete_')
+
+        self.PARSE_TO_CHANEL_BTN = InlineKeyboardButton(text='PARSE TO CHANEL', callback_data='_parse_to_channel_')
+        self.PARSE_TO_THIS_CHAT_BTN = InlineKeyboardButton(text='PARSE TO THIS CHAT',
+                                                           callback_data='_parse_to_this_chat_')
+
+    @staticmethod
+    def get_selection_keyboard(group):
+        builder = InlineKeyboardBuilder()
+        builder.button(text='SELECT', callback_data=f'_select_{group.group_id}')
+        return builder.as_markup()
+
+    def get_action_keyboard(self):
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [self.PARSE_BTN],
+                [self.DELETE_BTN],
+                [self.CANCEL_BTN],
+            ]
+        )
+        return keyboard
+
+    def get_parse_keyboard(self):
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [self.PARSE_TO_CHANEL_BTN],
+                [self.PARSE_TO_THIS_CHAT_BTN],
+                [self.CANCEL_BTN],
+            ]
+        )
+        return keyboard
