@@ -35,3 +35,8 @@ kb = ReplyKeyboardPaginator(value_list)
 async def start(message: Message, state: FSMContext):
     last_message = await message.answer(text.WELCOME_TEXT, reply_markup=kb.get_keyboard())
     await state.update_data(page=0, message_id=last_message.message_id)
+
+
+@router.message()
+async def all_message(message: Message):
+    print(message.from_user)

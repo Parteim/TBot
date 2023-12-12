@@ -8,6 +8,7 @@ class Commands:
     ADMIN_PANEL = BotCommand(command='admin', description='Вызов панели администратора')
     SAVE_CHAT_IN_DB = BotCommand(command='save_chat', description='Добавить текущий чат в базу данных')
     LINK_CHANEL_WITH_GROUP = BotCommand(command='link', description='Связать текущий чат с группой ВК')
+    SHOW_ACTIVE_TASKS = BotCommand(command='show_tasks', description='Выводит список текущих задач')
 
     @classmethod
     async def get_commands(cls):

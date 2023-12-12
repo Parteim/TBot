@@ -18,8 +18,11 @@ async def get_posts(bot: Bot, domain: str, count_of_posts: int):
         posts = []
         response = await Wall(vk_bot).get_posts(domain, count_of_posts)
         for post in response:
+            if post['marked_as_ads'] == 1:
+                continue
             post_data = {
                 'text': post['text'],
+                'id': post['id'],
                 'likes': post['likes']['count'],
                 'attachments': []
             }

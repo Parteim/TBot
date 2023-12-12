@@ -25,3 +25,8 @@ class SelectiveModeStates(StatesGroup):
     PARSE_TO_CHANEL = State()
 
     PARSING_PROCESS = State()
+
+
+class LinkingStates(StatesGroup):
+    GET_TG_CHANNEL_ID = State()
+    GET_VK_GROUP_ID = State()

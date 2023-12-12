@@ -15,6 +15,7 @@ from src.bot.admin.keyboards import (
 )
 from src.bot.config import Config
 from src.bot.db.db_manager import get_vk_groups, add_vk_group, get_vk_group_by_id
+from src.bot.utils.tasks.manager import GroupTask
 
 from src.bot.utils.vk_api.utils.groups import check_vk_group
 from src.bot.utils.vk_api.base import Bot as VkBot
@@ -169,7 +170,7 @@ async def select_group(callback: CallbackQuery, bot: Bot, state: FSMContext):
         await bot.delete_message(chat_id=callback.message.chat.id, message_id=int(message_id))
     group_id = callback.data.split('_')[-1]
     group = await get_vk_group_by_id(group_id)
-    await state.update_data(group=group)
+    await state.update_data(group_id=group.group_id)
     message_answer = group.response_message_repr()
     selected_group_massage = await callback.message.answer_photo(
         *message_answer,
@@ -210,7 +211,7 @@ async def parse_to_this_chat(callback: CallbackQuery, bot: Bot, state: FSMContex
     await state.set_state(SelectiveModeStates.PARSING_PROCESS)
 
     data = await state.get_data()
-    group = data['group']
+    group = await get_vk_group_by_id(data['group_id'])
     posts = await get_posts(
         VkBot(Config.VK_ACCESS_TOKEN),
         domain=group.domain,
@@ -230,4 +231,14 @@ async def parse_to_this_chat(callback: CallbackQuery, bot: Bot, state: FSMContex
             break
     await callback.message.answer(text.PARSING_COMPLETE)
     await state.clear()
+
+
 # @router.callback_query(IsAdmin(), F.data == SelectiveModeInlineKeyboard().PARSE_TO_CHANEL_BTN.callback_data)
+@router.callback_query(IsAdmin(), F.data == SelectiveModeInlineKeyboard().SET_TASK_BTN.callback_data)
+async def set_task(callback: CallbackQuery, bot: Bot, state: FSMContext):
+    group_id = (await state.get_data())['group_id']
+    group = await get_vk_group_by_id(group_id)
+    group_task_manager = GroupTask(group)
+    await group_task_manager.load_posts()
+    group_task_manager.create_send_post_task()
+    await callback.answer('task created')

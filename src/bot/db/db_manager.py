@@ -1,4 +1,4 @@
-from .models import TgChannel, User, VkGroup
+from .models import TgChannel, User, VkGroup, VkPost
 from sqlalchemy import select
 import sqlalchemy
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -11,6 +11,16 @@ from src.bot.config import Config
 engin = create_async_engine(Config.DB_URL, echo=True)
 
 async_session = async_sessionmaker(engin)
+
+
+async def add_post(post_id, group_id):
+    async with async_session() as session:
+        post = VkPost(
+            post_id=post_id,
+            vk_group_id=group_id,
+        )
+        session.add_all([post])
+        await session.commit()
 
 
 async def async_main():
@@ -43,7 +53,7 @@ async def add_vk_group(group_data):
         await session.commit()
 
 
-async def add_tg_channel(channel_data):
+async def save_tg_channel(channel_data):
     async with async_session() as session:
         new_group = TgChannel(
             channel_id=channel_data.id,
@@ -51,6 +61,7 @@ async def add_tg_channel(channel_data):
         )
         session.add_all([new_group])
         await session.commit()
+        return new_group
 
 
 async def get_tg_channel_by_id(channel_id):
@@ -59,4 +70,11 @@ async def get_tg_channel_by_id(channel_id):
             result = await session.scalars(select(TgChannel).where(TgChannel.channel_id == channel_id))
             return result.first()
         except OperationalError:
-            return False
+            return None
+
+
+async def update_tg_channel(chanel: TgChannel):
+    async with async_session() as session:
+        session.add_all([chanel])
+        await session.commit()
+        return chanel

@@ -90,6 +90,7 @@ class SelectiveModeInlineKeyboard:
 
         self.PARSE_BTN = InlineKeyboardButton(text='PARSE', callback_data='_selective_mode_parse_')
         self.DELETE_BTN = InlineKeyboardButton(text='DELETE', callback_data='_delete_')
+        self.SET_TASK_BTN = InlineKeyboardButton(text='SET TASK', callback_data='_set_task_')
 
         self.PARSE_TO_CHANEL_BTN = InlineKeyboardButton(text='PARSE TO CHANEL', callback_data='_parse_to_channel_')
         self.PARSE_TO_THIS_CHAT_BTN = InlineKeyboardButton(text='PARSE TO THIS CHAT',
@@ -106,6 +107,7 @@ class SelectiveModeInlineKeyboard:
             inline_keyboard=[
                 [self.PARSE_BTN],
                 [self.DELETE_BTN],
+                [self.SET_TASK_BTN],
                 [self.CANCEL_BTN],
             ]
         )

@@ -3,6 +3,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
+from src.bot.admin.states import LinkingStates
 from src.bot.admin.utils.commands import Commands
 from src.bot.admin.utils.resource import text
 from src.bot.admin.filters import IsAdmin
@@ -11,7 +12,8 @@ from src.bot.admin.keyboards import (
     AdminVkConsoleKeyboard,
     AdminParseInlineKeyboard,
 )
-from src.bot.db.db_manager import add_tg_channel, get_tg_channel_by_id
+from src.bot.db.db_manager import save_tg_channel, get_tg_channel_by_id, update_tg_channel, get_vk_group_by_id
+from src.bot.utils.tasks.manager import scheduler
 
 router = Router()
 
@@ -37,14 +39,38 @@ async def show_admin_panel(message: Message, bot: Bot):
 @router.message(IsAdmin(), Command(Commands.SAVE_CHAT_IN_DB.command))
 async def save_channel(message: Message, bot: Bot):
     chanel = message.chat
-    await add_tg_channel(chanel)
+    await save_tg_channel(chanel)
     await message.answer('-DONE-')
 
 
 @router.channel_post(Command(Commands.LINK_CHANEL_WITH_GROUP.command))
-async def link_with_group(message: Message, bot: Bot):
+async def link_with_group(message: Message, bot: Bot, state: FSMContext):
     chanel = message.chat
-    check = await get_tg_channel_by_id(chanel.id)
-    print(check)
-    # await add_tg_channel(chanel)
-    await message.answer(str(check))
+    channel_db_instance = await get_tg_channel_by_id(chanel.id)
+    if channel_db_instance is None:
+        channel_db_instance = await save_tg_channel(chanel)
+    await state.update_data(channel_id=chanel.id)
+    await message.answer(f'{channel_db_instance}\nNow give me id of vk group')
+    await state.set_state(LinkingStates.GET_VK_GROUP_ID)
+
+
+@router.channel_post(LinkingStates.GET_VK_GROUP_ID)
+async def link_get_group_id(message: Message, bot: Bot, state: FSMContext):
+    if not message.text.isdigit():
+        await message.answer('Id should be integer!')
+        return
+    channel_id = (await state.get_data())['channel_id']
+    group_id = int(message.text)
+    chanel = await get_tg_channel_by_id(channel_id)
+    group = await get_vk_group_by_id(group_id)
+    chanel.vk_group_id = group.id
+    await update_tg_channel(chanel)
+    await message.answer('-DONE-')
+    await state.clear()
+
+
+@router.message(Command(Commands.SHOW_ACTIVE_TASKS))
+async def show_tasks(message: Message):
+    for task in scheduler.get_jobs():
+        print(task)
+        await message.answer(str(task))
