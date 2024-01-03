@@ -1,3 +1,8 @@
 CANCEL_TEXT = '`--CANCELED--`'
 ADMIN_PANEL_TEXT = '`--ADMIN--`'
+
+# Vk console
 VK_CONSOLE_TEXT = '`--VK CONSOLE--`'
+# parsing
+GET_GROUP_TEXT = '`--GET LINK ON A GROUP--`'
+CLOSED_GROUP_TEXT = '`--CLOSED GROUP--`'
