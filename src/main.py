@@ -4,7 +4,9 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.enums.parse_mode import ParseMode
 from aiogram.fsm.storage.redis import RedisStorage
+
 from Bot.config import Config
+from Bot.handlers import main_router
 
 
 async def main() -> None:
@@ -13,7 +15,7 @@ async def main() -> None:
     bot = Bot(Config.BOT_TOKEN, parse_mode=ParseMode.MARKDOWN_V2)
     dp = Dispatcher()
 
-    # dp.include_routers()
+    dp.include_routers(main_router)
 
     await bot.delete_webhook(drop_pending_updates=True)
 
