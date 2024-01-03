@@ -1,9 +1,4 @@
-from dotenv import load_dotenv, find_dotenv
-import os
 import aiohttp
-import asyncio
-
-load_dotenv(find_dotenv())
 
 
 class Bot:
