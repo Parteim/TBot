@@ -1,86 +1,42 @@
-from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery
-from aiogram.filters import CommandStart
+from aiogram import F, Router, Bot
+from aiogram.types import Message, CallbackQuery, KeyboardButton, ReplyKeyboardMarkup
+from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.media_group import MediaGroupBuilder
 
-from src.bot.resources import text
-from ..keyboards.main_keyboards import main_kb, parse_inline_kb
-from ..states import ParseStates
-from ..utils.vk_bot.utils.groups import check_vk_group
-from ..utils.vk_bot.utils.wall import get_posts
+from contextlib import suppress
+from aiogram.exceptions import TelegramBadRequest
+
+from src.bot.keyboards.keybiard_paginator import ReplyKeyboardPaginator
+from src.bot.utils.commands import Commands
+from src.bot.utils.resource import text
+
+# from src.bot.keyboards.main_keyboards import Pagination, get_pagination_kb, PAGE_SIZE
 
 router = Router()
 
+# @router.callback_query(Pagination.filter(F.action.in_(['prev', 'next'])))
+# async def pagination_handler(callback: CallbackQuery, callback_data: Pagination):
+#     page_num = int(callback_data.page)
+#     page = page_num - 1 if page_num > 0 else 0
+#     if callback_data.action == 'next':
+#         page = page_num + 1 if page_num < (len(smiles) - 1) else page_num
+#
+#     with suppress(TelegramBadRequest):
+#         await callback.message.edit_text('', reply_markup=paginator(page))
+#     await callback.answer()
 
-@router.message(CommandStart())
-async def start_handler(message: Message):
-    await message.answer(text.START_TEXT, reply_markup=main_kb)
+value_list = [i for i in range(23)]
 
-
-@router.callback_query(F.data == '_cancel_')
-async def cancel(callback: CallbackQuery, state: FSMContext):
-    await state.clear()
-    await callback.message.delete()
-    await callback.message.answer('ok', reply_markup=main_kb)
-
-
-@router.message(F.text == 'parsing')
-async def parsing(message: Message, state: FSMContext):
-    await message.answer(text.PARSING)
-    await state.set_state(ParseStates.GET_GROUP_ID)
-    await message.answer(text.GET_GROUP_ID_TEXT)
+kb = ReplyKeyboardPaginator(value_list)
 
 
-@router.message(ParseStates.GET_GROUP_ID)
-async def get_group_id(message: Message, state: FSMContext):
-    domain = message.text.split('/')[-1]
-    group_data = await check_vk_group(domain)
-    if group_data:
-        if group_data['is_closed'] == 1:
-            await message.answer(text.CLOSED_GROUP_TEXT)
-        else:
-            await state.update_data(domain=domain)
-            await state.update_data(group=group_data)
-            await state.set_state(ParseStates.GET_COUNT_OF_POSTS)
-            await message.answer(text.GET_COUNT_OF_POSTS_TEXT)
-    else:
-        await message.answer(text.INCORRECT_GROUP_ID_TEXT)
+@router.message(Command(Commands.START_COMMAND.command))
+async def start(message: Message, state: FSMContext):
+    last_message = await message.answer(text.WELCOME_TEXT, reply_markup=kb.get_keyboard())
+    await state.update_data(page=0, message_id=last_message.message_id)
 
 
-@router.message(ParseStates.GET_COUNT_OF_POSTS)
-async def get_count_of_posts(message: Message, state: FSMContext):
-    if message.text.isdigit():
-        await state.update_data(count_of_posts=message.text)
-        await state.set_state(ParseStates.READY_TO_PARSE)
-        await message.answer(text.READY_TO_PARSE_TEXT)
-        # ==
-        data = await state.get_data()
-        formatted_text = f"id:{data['group']['id']}\n<b>{data['group']['name']}</b>\n" \
-                         f"count of posts:{data['count_of_posts']}"
-        await message.answer_photo(
-            data['group']['photo_200'],
-            formatted_text,
-            reply_markup=parse_inline_kb,
-        )
-        # ==
-    else:
-        await message.answer(text.INCORRECT_COUNT_OF_POSTS)
-
-
-@router.callback_query(F.data == '_parse_')
-async def run_parsing(callback: CallbackQuery, state: FSMContext):
-    await callback.message.delete()
-    await callback.message.answer(text.PARSING_PROCESS)
-    data = await state.get_data()
-    posts = await get_posts(data['domain'], int(data['count_of_posts']))
-    for post in posts:
-        group_post_images = MediaGroupBuilder()
-        if len(post['attachments']) > 0:
-            for image in post['attachments']:
-                group_post_images.add_photo(media=image)
-            await callback.message.answer(post['text']) if post['text'] else None
-            await callback.message.answer_media_group(media=group_post_images.build())
-        else:
-            continue
-    await state.clear()
+@router.message()
+async def all_message(message: Message):
+    print(message.from_user)

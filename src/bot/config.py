@@ -5,13 +5,28 @@ from dataclasses import dataclass
 load_dotenv(find_dotenv())
 
 
-# 1065749495
+@dataclass
+class RedisConfig:
+    HOST: str
+    PORT: int
+    DB: int
+    DECODE_RESPONSE: bool = True
+
+    def get_url(self):
+        return f'redis://{self.HOST}:{self.PORT}/{self.DB}'
+
 
 @dataclass
 class Config:
-    BOT_TOKEN: str = os.getenv('BEST_BOT_TOKEN')
+    BOT_TOKEN: str = os.getenv('TOKEN')
     ADMIN_ID: int = int(os.getenv('ADMIN_ID'))
 
     VK_ACCESS_TOKEN = os.getenv('VK_SERVICES_ACCESS_KEY')
 
-    DB_URL = 'sqlite:///bot_db.db'
+    DB_URL = 'sqlite+aiosqlite:///bot/db/db.sqlite3'
+
+    REDIS_CONFIG = RedisConfig(
+        HOST='localhost',
+        PORT=6379,
+        DB=0,
+    )
