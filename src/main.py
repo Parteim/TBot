@@ -8,10 +8,14 @@ from aiogram.fsm.storage.redis import RedisStorage
 from Bot.config import Config
 from Bot.handlers import main_router
 from Bot.comands import Commands
+from Bot.admin import AdminCommands
+
+from Bot.admin.handlers import admin_router
 
 
 async def bot_start(bot: Bot) -> None:
     await Commands.set_commands(bot)
+    await AdminCommands.set_commands(bot)
 
     await bot.send_message(Config.ADMIN_ID, text='Bot is running')
 
@@ -29,7 +33,7 @@ async def main() -> None:
     dp.startup.register(bot_start)
     dp.shutdown.register(bot_stop)
 
-    dp.include_routers(main_router)
+    dp.include_routers(admin_router, main_router)
 
     await bot.delete_webhook(drop_pending_updates=True)
 
