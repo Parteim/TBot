@@ -7,11 +7,11 @@ from aiogram.fsm.storage.redis import RedisStorage
 
 from Bot.config import Config
 from Bot.handlers import main_router
-from Bot.filters import BotCommands
+from Bot.comands import Commands
 
 
 async def bot_start(bot: Bot) -> None:
-    await BotCommands.set_commands(bot)
+    await Commands.set_commands(bot)
 
     await bot.send_message(Config.ADMIN_ID, text='Bot is running')
 
