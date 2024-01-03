@@ -7,6 +7,17 @@ from aiogram.fsm.storage.redis import RedisStorage
 
 from Bot.config import Config
 from Bot.handlers import main_router
+from Bot.filters import BotCommands
+
+
+async def bot_start(bot: Bot) -> None:
+    await BotCommands.set_commands(bot)
+
+    await bot.send_message(Config.ADMIN_ID, text='Bot is running')
+
+
+async def bot_stop(bot: Bot) -> None:
+    await bot.send_message(Config.ADMIN_ID, text='Bot is stopped')
 
 
 async def main() -> None:
@@ -14,6 +25,9 @@ async def main() -> None:
 
     bot = Bot(Config.BOT_TOKEN, parse_mode=ParseMode.MARKDOWN_V2)
     dp = Dispatcher()
+
+    dp.startup.register(bot_start)
+    dp.shutdown.register(bot_stop)
 
     dp.include_routers(main_router)
 
