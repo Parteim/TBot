@@ -11,6 +11,9 @@ class Bot:
         self.__access_token = access_token
         self.__session = aiohttp.ClientSession()
 
+    def create_new_session(self):
+        self.__session = aiohttp.ClientSession()
+
     def get_token(self):
         return self.__access_token
 

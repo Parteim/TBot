@@ -1,6 +1,11 @@
 from aiogram.fsm.state import StatesGroup, State
 
 
+class GetWeatehr(StatesGroup):
+    GET_CITY = State()
+    CHOOCE_WEATHER = State()
+
+
 class ParsingStates(StatesGroup):
     GET_GROUP = State()
     GET_COUNT_OF_POSTS = State()

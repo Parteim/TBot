@@ -11,10 +11,12 @@ from src.bot.admin.keyboards import (
     AdminPanelKeyboard,
     AdminVkConsoleKeyboard,
     AdminParseInlineKeyboard,
-    AdminAddGroupInlineKeyBoard, SelectiveModeInlineKeyboard
+    AdminAddGroupInlineKeyBoard, SelectiveModeInlineKeyboard, get_link_channel_kb
 )
 from src.bot.config import Config
-from src.bot.db.db_manager import get_vk_groups, add_vk_group, get_vk_group_by_id
+# from src.bot.db.db_manager import get_vk_groups, add_vk_group, get_vk_group_by_id, get_tg_channel_list, \
+#     get_tg_channel_by_id, update_vk_group
+from src.bot.db.db_manager import VkGroupManager, TGChannelManager
 from src.bot.utils.tasks.manager import GroupTask
 
 from src.bot.utils.vk_api.utils.groups import check_vk_group
@@ -105,7 +107,7 @@ async def run_parsing(callback: CallbackQuery, state: FSMContext, bot: Bot):
 
 @router.message(F.text == AdminVkConsoleKeyboard().GROUP_LIST_BTN.text)
 async def group_list(message: Message):
-    groups = await get_vk_groups()
+    groups = await VkGroupManager().get_all()
     response_text = '\n\n'.join(f'➡{group}' for group in groups)
     await message.answer(response_text)
 
@@ -139,7 +141,16 @@ async def get_group(message: Message, state: FSMContext):
 async def add_group_in_db(callback: CallbackQuery, state: FSMContext):
     await callback.message.delete()
     try:
-        await add_vk_group((await state.get_data())['group'])
+        group_data = (await state.get_data())['group']
+        group = VkGroupManager.model(
+            vk_id=group_data['id'],
+            domain=group_data['screen_name'],
+            name=group_data['name'],
+            is_closed=group_data['is_closed'],
+            logo=group_data['photo_200'],
+        )
+        await VkGroupManager().create(group)
+        # await add_vk_group((await state.get_data())['group'])
         await callback.answer(text.ADD_GROUP_SUCCESSFUL_CB)
         await callback.message.answer(text.ADD_GROUP_SUCCESSFUL_TEXT)
 
@@ -152,10 +163,12 @@ async def add_group_in_db(callback: CallbackQuery, state: FSMContext):
 
 @router.message(IsAdmin(), F.text == AdminVkConsoleKeyboard().SELECTIVE_MODE_BTN.text)
 async def selective_mode(message: Message, state: FSMContext):
-    groups = await get_vk_groups()
+    groups = await VkGroupManager().get_all()
     massages_id = []
     for group in groups:
+        print(group)
         answer_message = group.response_message_repr()
+        print(answer_message)
         answered_message = await message.answer_photo(
             *answer_message,
             reply_markup=SelectiveModeInlineKeyboard().get_selection_keyboard(group)
@@ -169,8 +182,10 @@ async def select_group(callback: CallbackQuery, bot: Bot, state: FSMContext):
     for message_id in (await state.get_data())['massages_id']:
         await bot.delete_message(chat_id=callback.message.chat.id, message_id=int(message_id))
     group_id = callback.data.split('_')[-1]
-    group = await get_vk_group_by_id(group_id)
-    await state.update_data(group_id=group.group_id)
+    print(group_id)
+    group = await VkGroupManager().get_by_id(group_id)
+    print(group)
+    await state.update_data(group_id=group.vk_id)
     message_answer = group.response_message_repr()
     selected_group_massage = await callback.message.answer_photo(
         *message_answer,
@@ -211,7 +226,7 @@ async def parse_to_this_chat(callback: CallbackQuery, bot: Bot, state: FSMContex
     await state.set_state(SelectiveModeStates.PARSING_PROCESS)
 
     data = await state.get_data()
-    group = await get_vk_group_by_id(data['group_id'])
+    group = await VkGroupManager().get_by_id(data['group_id'])
     posts = await get_posts(
         VkBot(Config.VK_ACCESS_TOKEN),
         domain=group.domain,
@@ -237,8 +252,31 @@ async def parse_to_this_chat(callback: CallbackQuery, bot: Bot, state: FSMContex
 @router.callback_query(IsAdmin(), F.data == SelectiveModeInlineKeyboard().SET_TASK_BTN.callback_data)
 async def set_task(callback: CallbackQuery, bot: Bot, state: FSMContext):
     group_id = (await state.get_data())['group_id']
-    group = await get_vk_group_by_id(group_id)
+    group = await VkGroupManager().get_by_id(group_id)
     group_task_manager = GroupTask(group)
     await group_task_manager.load_posts()
     group_task_manager.create_send_post_task()
     await callback.answer('task created')
+
+
+@router.callback_query(IsAdmin(), F.data == SelectiveModeInlineKeyboard().LINK_WITH_CHANNEL_BTN.callback_data)
+async def link_with_channel(callback: CallbackQuery, bot: Bot, state: FSMContext):
+    channel_list = await TGChannelManager().get_all()
+
+    for channel in channel_list:
+        await callback.message.answer(str(channel), reply_markup=get_link_channel_kb(channel))
+
+
+@router.callback_query(IsAdmin(), F.data.startswith('_link_'))
+async def link(callback: CallbackQuery, bot: Bot, state: FSMContext):
+    tg_channel = await TGChannelManager().get_by_id(callback.data.split('_')[-1])
+    group = await VkGroupManager().get_by_id((await state.get_data())['group_id'])
+    print('=' * 10, group)
+    print('=' * 10, tg_channel)
+    print(tg_channel.id)
+    group.tg_channel_id = tg_channel.id
+    await VkGroupManager().update(group)
+    await callback.answer('-DONE-')
+
+
+""" user_id 123412 date_time: 341242141 city: Moscow temp: 21C """

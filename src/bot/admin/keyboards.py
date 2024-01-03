@@ -32,6 +32,26 @@ class AdminPanelKeyboard:
         return keyboard
 
 
+class AdminTgConsoleKeyboard:
+    def __init__(self):
+        self.CHANNEL_LIST_BTN = ReplyKeyboardButton(text='channel list')
+        # self.ADD_GROUP_BTN = ReplyKeyboardButton(text='add group')
+        self.SELECTIVE_MODE_BTN = ReplyKeyboardButton(text='selective mode')
+        self.BACK_BTN = ReplyKeyboardButton(text='cancel')
+
+    def get_keyboard(self):
+        keyboard = ReplyKeyboardMarkup(
+            resize_keyboard=True,
+            keyboard=[
+                [self.CHANNEL_LIST_BTN, self.ADD_GROUP_BTN],
+                [self.SELECTIVE_MODE_BTN],
+                [self.FAST_PARSE_BTN],
+                [self.BACK_BTN]
+            ]
+        )
+        return keyboard
+
+
 class AdminVkConsoleKeyboard:
     def __init__(self):
         self.GROUP_LIST_BTN = ReplyKeyboardButton(text='group list')
@@ -91,6 +111,7 @@ class SelectiveModeInlineKeyboard:
         self.PARSE_BTN = InlineKeyboardButton(text='PARSE', callback_data='_selective_mode_parse_')
         self.DELETE_BTN = InlineKeyboardButton(text='DELETE', callback_data='_delete_')
         self.SET_TASK_BTN = InlineKeyboardButton(text='SET TASK', callback_data='_set_task_')
+        self.LINK_WITH_CHANNEL_BTN = InlineKeyboardButton(text='LINK WITH CHANNEL', callback_data='_link_with_channel_')
 
         self.PARSE_TO_CHANEL_BTN = InlineKeyboardButton(text='PARSE TO CHANEL', callback_data='_parse_to_channel_')
         self.PARSE_TO_THIS_CHAT_BTN = InlineKeyboardButton(text='PARSE TO THIS CHAT',
@@ -99,7 +120,7 @@ class SelectiveModeInlineKeyboard:
     @staticmethod
     def get_selection_keyboard(group):
         builder = InlineKeyboardBuilder()
-        builder.button(text='SELECT', callback_data=f'_select_{group.group_id}')
+        builder.button(text='SELECT', callback_data=f'_select_{group.vk_id}')
         return builder.as_markup()
 
     def get_action_keyboard(self):
@@ -108,6 +129,7 @@ class SelectiveModeInlineKeyboard:
                 [self.PARSE_BTN],
                 [self.DELETE_BTN],
                 [self.SET_TASK_BTN],
+                [self.LINK_WITH_CHANNEL_BTN],
                 [self.CANCEL_BTN],
             ]
         )
@@ -122,3 +144,19 @@ class SelectiveModeInlineKeyboard:
             ]
         )
         return keyboard
+
+
+def get_link_channel_kb(channel):
+    builder = InlineKeyboardBuilder()
+    builder.button(text='link', callback_data=f'_link_{channel.telegram_id}')
+    return builder.as_markup()
+
+
+weather_kb = ReplyKeyboardMarkup(
+    resize_keyboard=True,
+    keyboard=[
+        [KeyboardButton(text='Some BTN'), KeyboardButton(text='Some BTN')],
+        [KeyboardButton(text='Some BTN'), KeyboardButton(text='Some BTN')],
+        [KeyboardButton(text='Some BTN')],
+    ]
+)

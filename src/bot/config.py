@@ -23,7 +23,7 @@ class Config:
 
     VK_ACCESS_TOKEN = os.getenv('VK_SERVICES_ACCESS_KEY')
 
-    DB_URL = 'sqlite+aiosqlite:///db.sqlite3'
+    DB_URL = 'sqlite+aiosqlite:///bot/db/db.sqlite3'
 
     REDIS_CONFIG = RedisConfig(
         HOST='localhost',

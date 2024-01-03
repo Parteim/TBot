@@ -16,7 +16,7 @@ from bot.admin.utils.commands import Commands as AdminCommands
 from bot.config import Config
 from bot.handlers.main_handlers import router, kb
 from bot.admin.handlers import router as admin_router
-from src.bot.db.db_manager import async_main
+from src.bot.db.db_manager import main as m
 from src.bot.utils.tasks.manager import scheduler, load_posts
 
 
@@ -24,6 +24,7 @@ async def start_bot(bot: Bot):
     await Commands.set_commands(bot)
     await AdminCommands.set_commands(bot)
     await bot.send_message(Config.ADMIN_ID, text='Bot is running')
+    await m()
     await load_posts()
 
 
@@ -45,8 +46,6 @@ async def reset_jobs():
 
 async def main() -> None:
     logging.basicConfig(level=logging.INFO)
-
-    await async_main()
 
     storage = RedisStorage.from_url(Config.REDIS_CONFIG.get_url())
 
