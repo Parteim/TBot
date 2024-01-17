@@ -1,8 +1,11 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
 from dataclasses import dataclass
 
 load_dotenv(find_dotenv())
+
+BASE_DIR = Path(__file__).parent.parent
 
 
 @dataclass
@@ -23,7 +26,7 @@ class Config:
 
     VK_ACCESS_TOKEN = os.getenv('VK_SERVICES_ACCESS_KEY')
 
-    DB_URL = 'sqlite+aiosqlite:///bot/db/db.sqlite3'
+    DB_URL = f'sqlite+aiosqlite:///{BASE_DIR}/Bot/db/db.sqlite3'
 
     REDIS_CONFIG = RedisConfig(
         HOST='localhost',
