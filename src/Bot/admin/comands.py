@@ -7,6 +7,7 @@ from src.Bot.config import Config
 class Commands:
     ADMIN_PANEL = BotCommand(command='admin', description='Вызов панели администратора')
     SHOW_ACTIVE_TASKS = BotCommand(command='show_tasks', description='Выводит список текущих задач')
+    SAVE_CHANNEL_IN_DB = BotCommand(command='save_channel', description='Добавить текущий канал в базу данных')
 
     @classmethod
     async def get_commands(cls):

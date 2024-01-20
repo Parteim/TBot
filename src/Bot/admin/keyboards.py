@@ -14,8 +14,26 @@ class AdminPanelKeyboard:
         return ReplyKeyboardMarkup(
             resize_keyboard=True,
             keyboard=[
-                [self.BOT_CONFIG_BTN, self.VK_CONSOLE_BTN],
-                [self.TG_CONSOLE_BTN],
+                [self.TG_CONSOLE_BTN, self.VK_CONSOLE_BTN],
+                [self.BOT_CONFIG_BTN],
+            ]
+        )
+
+
+class AdminBotConfigKeyboard:
+    def __init__(self):
+        self.START_SCHEDULER_BTN = KeyboardButton(text='start scheduler')
+        self.SHUTDOWN_SCHEDULER_BTN = KeyboardButton(text='shutdown scheduler')
+        self.REMOVE_ALL_JOBS_SCHEDULER_BTN = KeyboardButton(text='remove all jobs')
+        self.JOBS_LIST_SCHEDULER_BTN = KeyboardButton(text='job list')
+
+    def get_keyboard(self):
+        return ReplyKeyboardMarkup(
+            resize_keyboard=True,
+            keyboard=[
+                [self.START_SCHEDULER_BTN, self.SHUTDOWN_SCHEDULER_BTN],
+                [self.REMOVE_ALL_JOBS_SCHEDULER_BTN],
+                [self.JOBS_LIST_SCHEDULER_BTN],
             ]
         )
 
@@ -75,37 +93,24 @@ class AdminSelectiveModeInlineKeyboard:
     def __init__(self):
         self.PARS_BTN = InlineKeyboardButton(text='PARS', callback_data='_selective_mode_parse_')
         self.LINK_BTN = InlineKeyboardButton(text='LINK WITH CHANNEL', callback_data='_link_')
+        self.ADD_JOBS_BTN = InlineKeyboardButton(text='ADD JOBS', callback_data='_add_jobs_')
+        self.SHOW_LINKED_CHANNELS_BTN = InlineKeyboardButton(text='SHOW LINKED CHANNELS',
+                                                             callback_data='_show_linked_channels_')
         self.DELETE_BTN = InlineKeyboardButton(text='DELETE', callback_data='_delete_')
 
     def get_keyboard(self, group_id: int):
         self.PARS_BTN.callback_data += str(group_id)
         self.LINK_BTN.callback_data += str(group_id)
         self.DELETE_BTN.callback_data += str(group_id)
+        self.SHOW_LINKED_CHANNELS_BTN.callback_data += str(group_id)
+        self.ADD_JOBS_BTN.callback_data += str(group_id)
 
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
                 [self.PARS_BTN],
+                [self.ADD_JOBS_BTN],
                 [self.LINK_BTN],
-                [self.DELETE_BTN],
-            ])
-        return keyboard
-
-
-class AdminLinkGroupWithChannelKeyboard:
-    def __init__(self):
-        self.PARS_BTN = InlineKeyboardButton(text='PARS', callback_data='_selective_mode_parse_')
-        self.LINK_BTN = InlineKeyboardButton(text='LINK WITH CHANNEL', callback_data='_link_')
-        self.DELETE_BTN = InlineKeyboardButton(text='DELETE', callback_data='_delete_')
-
-    def get_keyboard(self, group_id: int):
-        self.PARS_BTN.callback_data += str(group_id)
-        self.LINK_BTN.callback_data += str(group_id)
-        self.DELETE_BTN.callback_data += str(group_id)
-
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [self.PARS_BTN],
-                [self.LINK_BTN],
+                [self.SHOW_LINKED_CHANNELS_BTN],
                 [self.DELETE_BTN],
             ])
         return keyboard
@@ -117,3 +122,32 @@ def get_admin_link_group_with_channel_keyboard(tg_channel_id):
             [InlineKeyboardButton(text='SELECT', callback_data=f'_select_{tg_channel_id}')]
         ]
     )
+
+
+class AdminTgConsoleKeyboard:
+    def __init__(self):
+        self.CHANNEL_LIST_BTN = KeyboardButton(text='Channel list')
+        self.SELECTIVE_MOD_BTN = KeyboardButton(text='Selective mode')
+
+    def get_keyboard(self):
+        return ReplyKeyboardMarkup(
+            resize_keyboard=True,
+            keyboard=[
+                [self.CHANNEL_LIST_BTN],
+                [self.SELECTIVE_MOD_BTN],
+            ]
+        )
+
+
+class AdminTgSelectiveModeKeyboard:
+    def __init__(self):
+        self.DELETE_BTN = InlineKeyboardButton(text='DELETE', callback_data='_channel_delete_')
+
+    def get_keyboard(self, channel_id: int):
+        self.DELETE_BTN.callback_data += str(channel_id)
+
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [self.DELETE_BTN],
+            ])
+        return keyboard

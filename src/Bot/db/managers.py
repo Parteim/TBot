@@ -78,6 +78,22 @@ class VkGroupManager(BaseManager):
             await session.commit()
             return vk_group
 
+    async def get_tg_channels(self, vk_group_id: int):
+        async with SessionFactory().session() as session:
+            vk_group = await session.scalar(
+                select(self.model)
+                .where(self.model.vk_id == vk_group_id)
+                .options(
+                    selectinload(self.model.tg_channels)
+                )
+            )
+            return vk_group.tg_channels
+
+    async def get_by_vk_id(self, vk_id: int) -> model:
+        async with SessionFactory().session() as session:
+            stmt = select(self.model).where(self.model.vk_id == vk_id)
+            return await session.scalar(stmt)
+
 
 class TgChannelManager(BaseManager):
     model = TgChannel
@@ -86,19 +102,3 @@ class TgChannelManager(BaseManager):
         async with SessionFactory().session() as session:
             stmt = select(self.model).where(self.model.tg_id == tg_id)
             return await session.scalar(stmt)
-
-
-async def main():
-    vk_m = VkGroupManager()
-
-    o = await vk_m.get_by_id(1)
-
-    o.name = 'EEEEE'
-
-    await vk_m.update(o)
-
-    print(await vk_m.get_by_id(1))
-
-
-if __name__ == '__main__':
-    asyncio.run(main())

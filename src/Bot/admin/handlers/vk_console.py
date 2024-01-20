@@ -2,9 +2,11 @@ from aiogram import Router, F, Bot
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
+from sqlalchemy.exc import IntegrityError
 
 from Bot.admin.states import AddGroupStates, SelectiveModeStates
 from Bot.db.managers import VkGroupManager, TgChannelManager
+from Bot.tasks.manager import VkGroupTaskManager
 from src.Bot.admin.keyboards import AdminPanelKeyboard, AdminVkConsoleKeyboard, AdminParseInlineKeyboard, \
     AdminAddGroupInlineKeyboard, AdminSelectiveModeInlineKeyboard, get_admin_link_group_with_channel_keyboard
 from src.Bot.admin.resource import text
@@ -25,12 +27,6 @@ def data_group_response_message(group):
                      f'domain: `{group["screen_name"]}`'
     photo = group['photo_200']
     return photo, formatted_text
-
-
-@router.callback_query(F.text == '_cancel_')
-async def cancel(callback: CallbackQuery, state: FSMContext):
-    await callback.answer(text.CANCEL_TEXT)
-    await state.clear()
 
 
 @router.message(IsAdmin(), F.text == AdminPanelKeyboard().VK_CONSOLE_BTN.text)
@@ -223,14 +219,31 @@ async def link_channel(callback: CallbackQuery, state: FSMContext):
     tg_id = callback.data.split('_')[-1]
 
     vk_manager = VkGroupManager()
-    await vk_manager.link_with_tg_channel(int(group_id), int(tg_id))
-    # vk_group = await vk_manager.get_by_id(int(group_id))
-    # tg_channel = await TgChannelManager().get_by_tg_id(int(tg_id))
-    # vk_group.tg_channels.append(tg_channel)
-    # vk_manager.update(vk_group)
-
+    try:
+        await vk_manager.link_with_tg_channel(int(group_id), int(tg_id))
+    except IntegrityError:
+        await callback.message.answer(text.CHANNEL_ALREADY_LINKED)
     await callback.answer(text.SUCCESS)
 
-# @router.callback_query()
-# async def test(callback: CallbackQuery, state: FSMContext):
-#     print(callback.data)
+
+@router.callback_query(
+    IsAdmin(),
+    F.data.startswith(AdminSelectiveModeInlineKeyboard().SHOW_LINKED_CHANNELS_BTN.callback_data),
+)
+async def check_linked_channels(callback: CallbackQuery):
+    group_id = callback.data.split('_')[-1]
+    tg_channels = await VkGroupManager().get_tg_channels(int(group_id))
+    for channel in tg_channels:
+        await callback.message.answer(str(channel))
+
+
+@router.callback_query(
+    IsAdmin(),
+    F.data.startswith(AdminSelectiveModeInlineKeyboard().ADD_JOBS_BTN.callback_data),
+)
+async def add_jobs(callback: CallbackQuery):
+    group_id = callback.data.split('_')[-1]
+    group = await VkGroupManager().get_by_vk_id(int(group_id))
+    task_manager = VkGroupTaskManager(group)
+    task_manager.create_post_tasks_for_all_channels()
+    await callback.answer(text.SUCCESS)

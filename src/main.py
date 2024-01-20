@@ -11,6 +11,7 @@ from Bot.comands import Commands
 from Bot.admin import AdminCommands
 
 from Bot.admin.handlers import admin_router
+from Bot.tasks import scheduler
 
 
 async def bot_start(bot: Bot) -> None:
@@ -28,7 +29,11 @@ async def main() -> None:
     logging.basicConfig(level=logging.INFO)
 
     bot = Bot(Config.BOT_TOKEN, parse_mode=ParseMode.MARKDOWN_V2)
-    dp = Dispatcher()
+
+    storage = RedisStorage.from_url(Config.REDIS_CONFIG.get_url())
+    dp = Dispatcher(storage=storage)
+
+    scheduler.ctx.add_instance(bot, declared_class=Bot)
 
     dp.startup.register(bot_start)
     dp.shutdown.register(bot_stop)
