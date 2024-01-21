@@ -10,19 +10,23 @@ from Bot.handlers import main_router
 from Bot.comands import Commands
 from Bot.admin import AdminCommands
 
+from Bot.tasks.manager import scheduler
 from Bot.admin.handlers import admin_router
-from Bot.tasks import scheduler
 
 
 async def bot_start(bot: Bot) -> None:
     await Commands.set_commands(bot)
     await AdminCommands.set_commands(bot)
 
+    scheduler.start()
+
     await bot.send_message(Config.ADMIN_ID, text='Bot is running')
 
 
 async def bot_stop(bot: Bot) -> None:
     await bot.send_message(Config.ADMIN_ID, text='Bot is stopped')
+    scheduler.remove_all_jobs()
+    scheduler.shutdown()
 
 
 async def main() -> None:

@@ -1,3 +1,1 @@
-from .manager import shed
-
-scheduler = shed()
+from .manager import scheduler

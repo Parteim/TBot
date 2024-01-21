@@ -78,11 +78,11 @@ class VkGroupManager(BaseManager):
             await session.commit()
             return vk_group
 
-    async def get_tg_channels(self, vk_group_id: int):
+    async def get_tg_channels(self, group_id: int):
         async with SessionFactory().session() as session:
             vk_group = await session.scalar(
                 select(self.model)
-                .where(self.model.vk_id == vk_group_id)
+                .where(self.model.id == group_id)
                 .options(
                     selectinload(self.model.tg_channels)
                 )

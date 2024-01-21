@@ -243,7 +243,9 @@ async def check_linked_channels(callback: CallbackQuery):
 )
 async def add_jobs(callback: CallbackQuery):
     group_id = callback.data.split('_')[-1]
-    group = await VkGroupManager().get_by_vk_id(int(group_id))
+    print(group_id)
+    group = await VkGroupManager().get_by_id(int(group_id))
+    print(group)
     task_manager = VkGroupTaskManager(group)
-    task_manager.create_post_tasks_for_all_channels()
+    await task_manager.create_post_tasks_for_all_channels()
     await callback.answer(text.SUCCESS)

@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from src.Bot.admin.keyboards import AdminPanelKeyboard, AdminBotConfigKeyboard
 from src.Bot.admin.resource import text
 from src.Bot.admin import AdminCommands
-from src.Bot.tasks import scheduler
+from src.Bot.tasks.manager import scheduler
 
 from src.Bot.filters import IsAdmin
 from src.Bot.comands import Commands as BotCommands
@@ -53,5 +53,6 @@ async def remove_all_jobs_shed(message: Message):
 @router.message(IsAdmin(), F.text == AdminBotConfigKeyboard().JOBS_LIST_SCHEDULER_BTN.text)
 async def jobs_list_shed(message: Message):
     print(scheduler.get_jobs())
+    print(scheduler)
     for job in scheduler.get_jobs():
-        await message.answer(str(job))
+        await message.answer(f'`{job}`')
