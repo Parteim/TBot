@@ -15,7 +15,7 @@ from src.Bot.config import Config
 
 from src.Bot.filters import IsAdmin
 from src.Bot.comands import Commands as BotCommands
-from src.Bot.states import ParsingStates
+from src.Bot.admin.states import AdminParsingStates
 from src.Bot.utils import check_vk_group, parse as group_parsing
 
 router = Router()
@@ -37,10 +37,10 @@ async def vk_console(message: Message):
 @router.message(IsAdmin(), F.text == AdminVkConsoleKeyboard().FAST_PARSE_BTN.text)
 async def parse_(message: Message, state: FSMContext):
     await message.answer(text.GET_GROUP_TEXT)
-    await state.set_state(ParsingStates.GET_GROUP)
+    await state.set_state(AdminParsingStates.GET_GROUP)
 
 
-@router.message(IsAdmin(), ParsingStates.GET_GROUP)
+@router.message(IsAdmin(), AdminParsingStates.GET_GROUP)
 async def get_group(message: Message, state: FSMContext):
     domain = message.text.split('/')[-1]
     group = await check_vk_group(Config.VK_ACCESS_TOKEN, domain)
@@ -49,13 +49,13 @@ async def get_group(message: Message, state: FSMContext):
             await message.answer(text.CLOSED_GROUP_TEXT)
         else:
             await state.update_data(group=group)
-            await state.set_state(ParsingStates.GET_COUNT_OF_POSTS)
+            await state.set_state(AdminParsingStates.GET_COUNT_OF_POSTS)
             await message.answer(text.GET_COUNT_OF_POSTS_TEXT)
     else:
         await message.answer(text.INCORRECT_GROUP_TEXT)
 
 
-@router.message(IsAdmin(), ParsingStates.GET_COUNT_OF_POSTS)
+@router.message(IsAdmin(), AdminParsingStates.GET_COUNT_OF_POSTS)
 async def get_count_of_posts(message: Message, state: FSMContext):
     try:
         count_of_posts = int(message.text)
@@ -69,12 +69,12 @@ async def get_count_of_posts(message: Message, state: FSMContext):
 
 
 @router.callback_query(
-    ParsingStates.GET_COUNT_OF_POSTS,
+    AdminParsingStates.GET_COUNT_OF_POSTS,
     F.data == AdminParseInlineKeyboard().PARSE_BTN.callback_data,
 )
 async def run_parsing(callback: CallbackQuery, state: FSMContext, bot: Bot):
     await callback.answer(text.PARSING_PROCESS)
-    await state.set_state(ParsingStates.PARSING_PROCESS)
+    await state.set_state(AdminParsingStates.PARSING_PROCESS)
     data = await state.get_data()
     await group_parsing(
         chat_id=callback.from_user.id,
@@ -191,7 +191,7 @@ async def selective_get_count_of_post(message: Message, state: FSMContext):
 )
 async def selective_pars_run(callback: CallbackQuery, state: FSMContext, bot: Bot):
     await callback.message.answer(text.PARSING_PROCESS)
-    await state.set_state(ParsingStates.PARSING_PROCESS)
+    await state.set_state(AdminParsingStates.PARSING_PROCESS)
     data = await state.get_data()
     await group_parsing(
         chat_id=callback.from_user.id,
@@ -243,9 +243,7 @@ async def check_linked_channels(callback: CallbackQuery):
 )
 async def add_jobs(callback: CallbackQuery):
     group_id = callback.data.split('_')[-1]
-    print(group_id)
     group = await VkGroupManager().get_by_id(int(group_id))
-    print(group)
     task_manager = VkGroupTaskManager(group)
     await task_manager.create_post_tasks_for_all_channels()
     await callback.answer(text.SUCCESS)

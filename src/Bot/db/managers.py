@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy.orm import selectinload
 
 from Bot.config import Config
-from .models import VkGroup, TgChannel, Base
+from .models import VkGroup, TgChannel, Base, VkPost
 
 
 class SessionFactory:
@@ -102,3 +102,7 @@ class TgChannelManager(BaseManager):
         async with SessionFactory().session() as session:
             stmt = select(self.model).where(self.model.tg_id == tg_id)
             return await session.scalar(stmt)
+
+
+class VkPostManger(BaseManager):
+    model = VkPost

@@ -6,12 +6,12 @@ from aiogram.enums.parse_mode import ParseMode
 from aiogram.fsm.storage.redis import RedisStorage
 
 from Bot.config import Config
-from Bot.handlers import main_router
 from Bot.comands import Commands
 from Bot.admin import AdminCommands
 
 from Bot.tasks.manager import scheduler
 from Bot.admin.handlers import admin_router
+from Bot.handlers import main_router
 
 
 async def bot_start(bot: Bot) -> None:

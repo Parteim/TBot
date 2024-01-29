@@ -1,7 +1,10 @@
+import json
+
 from aiogram.fsm.context import FSMContext
 from aiogram import Bot
 from aiogram.utils.media_group import MediaGroupBuilder
 
+from Bot.tasks.storage import posts_storage
 from src.Bot.config import Config
 from src.Bot.resource import text
 from src.Bot.states import ParsingStates
@@ -27,11 +30,35 @@ def get_current_size_photo(images: list):
     return current_img
 
 
-async def get_posts(vk_bot_token: str, domain: str, count_of_posts: int):
+async def get_only_images(
+        domain: str,
+        count_of_posts: int,
+        offset: int = 0,
+        vk_bot_token: str = Config.VK_ACCESS_TOKEN):
+    vk_bot = Vkbot(vk_bot_token)
+    try:
+        post_images = []
+        response = await Wall(vk_bot).get_posts(domain, count_of_posts, offset=offset)
+        for post in response:
+            try:
+                if post['marked_as_ads'] == 1:
+                    continue
+                for attachment in post['attachments']:
+                    if attachment['type'] == 'photo':
+                        img = get_current_size_photo(attachment['photo']['sizes'])
+                        post_images.append(img) if img != '' else None
+            except TypeError as e:
+                print(e)
+        return post_images
+    finally:
+        await vk_bot.close_session()
+
+
+async def get_posts(vk_bot_token: str, domain: str, count_of_posts: int, offset: int = 0):
     vk_bot = Vkbot(vk_bot_token)
     try:
         posts = []
-        response = await Wall(vk_bot).get_posts(domain, count_of_posts)
+        response = await Wall(vk_bot).get_posts(domain, count_of_posts, offset=offset)
         for post in response:
             try:
                 if post['marked_as_ads'] == 1:

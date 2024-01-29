@@ -20,6 +20,14 @@ class RedisConfig:
 
 
 @dataclass
+class TaskConfig:
+    trigger: str = 'interval'
+    interval: int = 60 * 15
+
+    count_of_posts = 100
+
+
+@dataclass
 class Config:
     BOT_TOKEN: str = os.getenv('TOKEN')
     ADMIN_ID: int = int(os.getenv('ADMIN_ID'))
